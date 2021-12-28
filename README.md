@@ -13,4 +13,5 @@ step 2: Install dependencies
         "pg-hstore"
         "sequelize"
     
-    
+step 3: For run app use this command
+        npm start
