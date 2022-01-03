@@ -1,12 +1,21 @@
+const { company } = require("../models");
 const db = require("../models");
 const Product = db.product;
+const User = db.user;
 const Session = db.session;
+const CompanyhasManyUser = db.companyhasManyUser
 
 
 //add product
 exports.addProduct = async (req, res) => {
     try {
-        await Product.create({
+        const companyhasManyUser = await CompanyhasManyUser.findOne({
+            where: {
+                companyId: req.query.companyId
+            }
+        })
+        const product = await Product.create({
+            companyId: companyhasManyUser.companyId,
             productType: req.body.productType,
             productName: req.body.productName,
             productQuantity: req.body.productQuantity,
@@ -17,7 +26,7 @@ exports.addProduct = async (req, res) => {
         }
         else {
             res.send({ message: 'Product added successfully.' });
-        }  
+        }
     }
     catch (err) {
         res.send({ message: err.message });
@@ -33,18 +42,11 @@ exports.getProduct = async (req, res) => {
                 id: req.query.id
             }
         })
-        const session = await Session.findOne(
-            {
-                where: {
-                    token: req.headers.authorization
-                }
-            }
-        )
         if (product) {
             res.send({
                 product: {
                     id: product.id,
-                    userId: session.userId,
+                    companyId: product.companyId,
                     productType: product.productType,
                     productName: product.productName,
                     productQuantity: req.body.productQuantity,
@@ -74,7 +76,7 @@ exports.updateProduct = async (req, res) => {
         },
             {
                 where: {
-                    id: req.body.id
+                    companyId: req.body.companyId
                 }
             })
         res.send({ message: 'Product updated successfully.' });
@@ -94,6 +96,23 @@ exports.deleteProduct = async (req, res) => {
             }
         })
         res.send({ message: 'Product deleted successfully.' });
+    }
+    catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+}
+
+
+exports.getAllProduct = async (req, res) => {
+    try {
+        const product = await Product.findAll()
+        if (product) {
+            res.send({ product })
+            console.log(product);
+        }
+        else {
+            res.send({ message: 'Product Not Found!' });
+        }
     }
     catch (err) {
         res.status(500).send({ message: err.message });

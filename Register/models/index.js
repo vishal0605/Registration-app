@@ -26,11 +26,12 @@ db.company = require("../models/company.model.js")(sequelize, Sequelize);
 db.session = require("../models/mysession.model.js")(sequelize, Sequelize);
 db.companyhasManyUser = require("../models/companyhasManyUser.model.js")(sequelize, Sequelize);
 db.product = require("../models/product.model.js")(sequelize, Sequelize);
+db.invitation = require("../models/invitation.model.js")(sequelize, Sequelize);
 
 //company and user relation
-db.company.hasMany(db.user, {as : 'company', foreignKey : 'id'});
-db.user.belongsTo(db.company, {foreignKey : 'id'});
-
+//db.company.hasMany(db.user, {as : 'company', foreignKey : 'id'});
+//db.user.belongsTo(db.company, {foreignKey : 'userId'});
+//
 
 
 module.exports = db;
