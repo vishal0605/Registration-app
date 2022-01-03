@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const config = require("../config/auth.config.js");
 const db = require("../models");
+const Invitation = db.invitation
 //const Register = db.register;
 
 verifyToken = (req, res, next) => {
@@ -13,8 +14,20 @@ verifyToken = (req, res, next) => {
 
     jwt.verify(token, config.secret, (err, decoded) => {
         if (err) {
+            const timeObject = new Date();
+            const datetime = new Date(timeObject.getTime() + 1000 * 3600);
+            async (req, res) => {
+                await Invitation.update({
+                    expireAt: datetime
+                }, {
+                    where: {
+                        invitationToken: token
+                    }
+                })
+            }
             return res.status(401).send({
                 message: "Unauthorized!"
+
             });
         }
         req.id = decoded.id;

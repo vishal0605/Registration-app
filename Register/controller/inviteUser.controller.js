@@ -17,7 +17,7 @@ exports.inviteUser = async (req, res) => {
         }
         const { email } = req.body;
         let token = jwt.sign({ id: companyhasManyUser.companyId }, config.secret, {
-            expiresIn: '2h'
+            expiresIn: '1h'
         });
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -39,8 +39,7 @@ exports.inviteUser = async (req, res) => {
         await Invitation.create({
             companyId: req.query.companyId,
             email: email,
-            invitationToken: token,
-            expireAt: '2h'
+            invitationToken: token
         })
         return res.send({ message: 'Sent email to entered email address.' });
     }
