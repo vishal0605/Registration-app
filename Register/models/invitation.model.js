@@ -15,7 +15,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING,
         },
         expireAt: {
-            type: Sequelize.STRING
+            type: 'TIMESTAMP'
         },
         status: {
             type: Sequelize.ENUM,
