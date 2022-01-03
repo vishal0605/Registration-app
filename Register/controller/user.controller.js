@@ -7,13 +7,17 @@ const CompanyhasManyUser = db.companyhasManyUser;
 const nodemailer = require('nodemailer');
 let jwt = require("jsonwebtoken");
 let bcrypt = require("bcryptjs");
+const companyController = require("./company.controller");
+
 
 
 //signup
 exports.signup = async (req, res, next) => {
     try {
-        const company = await Company.create({
-            companyName: req.body.companyName
+        const company = await Company.findOne({
+            where: {
+                companyName: req.body.companyName
+            }
         })
         const user = await User.create({
             firstName: req.body.firstName,
@@ -21,10 +25,9 @@ exports.signup = async (req, res, next) => {
             email: req.body.email,
             password: bcrypt.hashSync(req.body.password, 8),
         })
-
         await CompanyhasManyUser.create({
-            companyId: company.id,
-            userId: user.id
+            companyId: company.companyId,
+            userId: user.userId
         })
         if (user) {
             res.send({ message: "User Was registerd succesfully!" });
@@ -44,6 +47,16 @@ exports.signin = async (req, res, next) => {
                 email: req.body.email
             }
         })
+        const companyhasManyUser = await CompanyhasManyUser.findOne({
+            where:{
+                userId : user.userId
+            }
+        })
+        const company = await Company.findOne({
+            where: {
+                companyId : companyhasManyUser.companyId  
+            }
+        })
         if (!user) {
             return res.status(404).send({ message: "User Not Found." });
         }
@@ -51,7 +64,7 @@ exports.signin = async (req, res, next) => {
             expiresIn: 86400
         });
         await Session.create({
-            userId: user.id,
+            userId: user.userId,
             token: token,
             status: Session.status
         })
@@ -67,14 +80,15 @@ exports.signin = async (req, res, next) => {
         }
         let users = await User.findOne({
             where: {
-                id: user.id
-            }, include: [Company]
+                userId: user.userId
+            }
         })
         res.status(200).send(
             {
                 users,
+                company,
                 session: {
-                    userId: user.id,
+                    userId: user.userId,
                     token: token,
                     status: Session.status
                 }
@@ -155,13 +169,18 @@ exports.getUser = async (req, res) => {
 //get userSession list
 exports.userSessionList = async (req, res) => {
     try {
-        const session = await Session.findAll();
+        const session = await Session.findAll({
+            limit: Session.userId,
+            where: {
+                userId: req.query.userId,
+            }
+        });
         console.log(session, "xxxxxxxxxxxxxxxxxxxx");
         console.log(session.status);
         if (session) {
             res.send({ user: session });
         } else {
-            res.send({ message: 'token unauthorized!' });
+            res.send({ message: 'User sessions not found!' });
         }
     }
     catch (err) {
