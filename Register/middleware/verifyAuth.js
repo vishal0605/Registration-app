@@ -18,7 +18,8 @@ verifyToken = (req, res, next) => {
             const datetime = new Date(timeObject.getTime() + 1000 * 3600);
             async (req, res) => {
                 await Invitation.update({
-                    expireAt: datetime
+                    expireAt: datetime,
+                    status: 'expire'
                 }, {
                     where: {
                         invitationToken: token

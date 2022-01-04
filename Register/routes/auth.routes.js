@@ -1,7 +1,6 @@
 const verifySignUp = require("../middleware/verifySignUp");
 const verifySignin = require("../middleware/verifySignin");
 const invitation = require("../middleware/invitation");
-const verifyCompany = require("../middleware/verifyCompany");
 const controller = require("../controller/user.controller");
 const prodcontroller = require("../controller/product.controller");
 const inviteUserController = require("../controller/inviteUser.controller");
@@ -45,7 +44,7 @@ module.exports = function (app) {
     //product
     app.post("/api/post/addProduct",
         [
-            verifyCompany.checkCompanyExist
+            verifySignin.checkUserLoggedin
         ],
         prodcontroller.addProduct
     );
@@ -56,19 +55,19 @@ module.exports = function (app) {
     );
     app.put("/api/put/updateProduct",
         [
-            verifyCompany.checkCompanyExist
+            verifySignin.checkUserLoggedin
         ],
         prodcontroller.updateProduct);
     app.post("/api/post/deleteProduct",
         [
-            verifyCompany.checkCompanyExist
+            verifySignin.checkUserLoggedin
         ],
         prodcontroller.deleteProduct);
 
     //inviteUser
     app.post("/api/auth/inviteUser",
         [
-            verifyCompany.checkCompanyExist
+            verifySignin.checkUserLoggedin
         ],
         inviteUserController.inviteUser);
 
@@ -76,7 +75,7 @@ module.exports = function (app) {
         "/api/auth/invitationStatus", 
         [
             invitation.checkInvitationExist,
-            verifyCompany.checkCompanyExist
+            verifySignin.checkUserLoggedin
         ],
         inviteUserController.invitationReply);
 
