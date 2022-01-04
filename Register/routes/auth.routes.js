@@ -1,6 +1,7 @@
 const verifySignUp = require("../middleware/verifySignUp");
 const verifySignin = require("../middleware/verifySignin");
 const invitation = require("../middleware/invitation");
+const verifyCompanyhasManyUser = require("../middleware/verifyCompanyhasManyUser");
 const controller = require("../controller/user.controller");
 const prodcontroller = require("../controller/product.controller");
 const inviteUserController = require("../controller/inviteUser.controller");
@@ -17,7 +18,7 @@ module.exports = function (app) {
     });
 
     app.post(
-        "/api/auth/signup",
+        "/api/post/signup",
         [
             verifySignUp.checkDuplicateEmail
         ],
@@ -25,7 +26,7 @@ module.exports = function (app) {
         controller.signup,
     );
     app.post(
-        "/api/auth/userSignup",
+        "/api/post/userRegister",
         [
             verifySignUp.checkDuplicateEmail
         ],
@@ -33,12 +34,12 @@ module.exports = function (app) {
     );
 
     //user
-    app.post("/api/auth/signin", controller.signin);
-    app.post("/api/auth/logout", controller.logout);
-    app.get("/api/auth/getuser/", controller.getUser);
-    app.get("/api/auth/userSessionList", controller.userSessionList);
-    app.post("/api/auth/forgotPassword", controller.forgotPassword);
-    app.post("/api/auth/resetPassword", controller.resetPassword);
+    app.post("/api/post/signin", controller.signin);
+    app.post("/api/post/logout", controller.logout);
+    app.get("/api/get/getuser/", controller.getUser);
+    app.get("/api/get/userSessionList", controller.userSessionList);
+    app.post("/api/post/forgotPassword", controller.forgotPassword);
+    app.post("/api/post/resetPassword", controller.resetPassword);
 
 
     //product
@@ -65,14 +66,16 @@ module.exports = function (app) {
         prodcontroller.deleteProduct);
 
     //inviteUser
-    app.post("/api/auth/inviteUser",
-        [
-            verifySignin.checkUserLoggedin
+    app.post("/api/post/inviteUser",
+        [  
+            verifySignin.checkUserLoggedin,
+            verifyCompanyhasManyUser.checkCompanyandUser
+            
         ],
         inviteUserController.inviteUser);
 
     app.post(
-        "/api/auth/invitationStatus", 
+        "/api/post/invitationStatus", 
         [
             invitation.checkInvitationExist,
             verifySignin.checkUserLoggedin

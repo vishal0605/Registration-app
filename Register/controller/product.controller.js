@@ -29,7 +29,7 @@ exports.addProduct = async (req, res) => {
         }
     }
     catch (err) {
-        res.send({ message: err.message });
+        res.status(500).send({ message: err.message });
     }
 }
 

@@ -12,7 +12,7 @@ checkUserLoggedin = async (req, res, next) => {
         )
         if (!session) {
             res.status(400).send({
-                message: "User is not logeed in , please check the email!!!"
+                message: "unauthorized!!!"
             });
             return;
         }

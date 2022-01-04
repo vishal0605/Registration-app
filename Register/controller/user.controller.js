@@ -7,7 +7,7 @@ const CompanyhasManyUser = db.companyhasManyUser;
 const nodemailer = require('nodemailer');
 let jwt = require("jsonwebtoken");
 let bcrypt = require("bcryptjs");
-const companyController = require("./company.controller");
+
 
 
 
@@ -34,7 +34,7 @@ exports.signup = async (req, res, next) => {
         }
     }
     catch (err) {
-        res.send({ message: err.message });
+        res.status(500).send({ message: err.message });
     }
 }
 
@@ -108,7 +108,6 @@ exports.logout = async (req, res) => {
                 token: req.headers.authorization
             }
         })
-        console.log(session.token, "xxxxxxxxxxxxxxxxxxxx");
         if (req.headers.authorization === session.token && session.status === 'active') {
             Session.update({
                 status: 'Expierd'
@@ -220,7 +219,7 @@ exports.forgotPassword = async (req, res) => {
         return res.send({ message: 'Please check the email and follow the instruction' });
     }
     catch (err) {
-        res.send({ message: err.message });
+        res.status(500).send({ message: err.message });
     }
 }
 
@@ -254,7 +253,7 @@ exports.resetPassword = async (req, res) => {
         }
     }
     catch (err) {
-        res.send({ message: err.message });
+        res.status(500).send({ message: err.message });
     }
 }
 

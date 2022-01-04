@@ -1,75 +1,60 @@
 const db = require("../models");
-const CompanyhasManyUser = db.companyhasManyUser;
+const Company = db.company;
 const Invitation = db.invitation;
 let jwt = require("jsonwebtoken");
 const config = require("../config/auth.config.js");
-const nodemailer = require('nodemailer');
-
+const emailConfig = require("../config/email.config.js");
 exports.inviteUser = async (req, res) => {
     try {
-        const companyhasManyUser = await CompanyhasManyUser.findOne({
+        const company = await Company.findOne({
             where: {
-                companyId: req.query.companyId
+                companyId: req.header('companyId')
             }
         })
-        if (!companyhasManyUser) {
+        if (!company) {
             res.send({ message: 'company Not Found!' });
         }
         const { email } = req.body;
-        let token = jwt.sign({ id: companyhasManyUser.companyId }, config.secret, {
+        let token = jwt.sign({ id: company.companyId }, config.secret, {
             expiresIn: '1h'
         });
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: 'rajpa4567890@gmail.com',
-                pass: 'Raj@6500'
-            }
-        });
+        const transporter = await emailConfig.trans;
         const mailOptions = {
-            from: 'rajpa4567890@gmail.com',
+            from: process.env,
             to: email,
             subject: 'Invitation Link',
             html: `
-                <h2>Please Click On this link for register in ${req.query.companyName}.</h2>
-                <div>link : http://127.0.0.1:8080/api/auth/userSignup/${token}</div>
-            `
-        };
+          <h2>Please Click On this link for register in company.</h2>
+          <div>link : http://127.0.0.1:8080/api/auth/userSignup/${token}</div>
+      `}
         await transporter.sendMail(mailOptions);
         await Invitation.create({
-            companyId: req.query.companyId,
+            companyId: company.companyId,
             email: email,
             invitationToken: token
         })
         return res.send({ message: 'Sent email to entered email address.' });
     }
     catch (err) {
-        res.send({ message: err.message });
+        res.status(500).send({ message: err.message });
     }
 }
 
 exports.invitationReply = async (req, res) => {
     try {
-        //const accept = { accept: req.body.accept }
         const { email, status } = req.body
         const userEmail = await Invitation.findOne({
             where: { email }
         })
         if (userEmail) {
             if (status === 'accept') {
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: 'rajpa4567890@gmail.com',
-                        pass: 'Raj@6500'
-                    }
-                });
+                const transporter = await emailConfig.trans;
                 const mailOptions = {
-                    from: 'rajpa4567890@gmail.com',
+                    from: process.env.FROM,
                     to: email,
                     subject: 'Invitation status',
                     html: `
-                    <h2>You are invited by ${req.query.companyName}.</h2>
+                    <h2>You are invited by company.</h2>
                     <h3>You can signin using below link:</h3>
                     <div>http://127.0.0.1:8080/api/auth/signin</div>
                 `
@@ -81,19 +66,13 @@ exports.invitationReply = async (req, res) => {
                 return res.send({ message: 'Sent Invitation email to User.' });
             }
             else {
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: 'rajpa4567890@gmail.com',
-                        pass: 'Raj@6500'
-                    }
-                });
+                const transporter = await emailConfig.trans;
                 const mailOptions = {
-                    from: 'rajpa4567890@gmail.com',
+                    from: process.env.FROM,
                     to: email,
                     subject: 'Invitation status',
                     html: `
-                    <h2>You are rejected by ${req.query.companyName}.</h2>
+                    <h2>You are rejected by company.</h2>
                 `
                 };
                 await transporter.sendMail(mailOptions);
@@ -106,6 +85,6 @@ exports.invitationReply = async (req, res) => {
         }
     }
     catch (err) {
-        res.send({ message: err.message });
+        res.status(500).send({ message: err.message });
     }
 }
