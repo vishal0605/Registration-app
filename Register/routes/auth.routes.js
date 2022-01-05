@@ -1,12 +1,4 @@
-const verifySignUp = require("../middleware/verifySignUp");
-const verifySignin = require("../middleware/verifySignin");
-const invitation = require("../middleware/invitation");
-const verifyCompanyhasManyUser = require("../middleware/verifyCompanyhasManyUser");
-const controller = require("../controller/user.controller");
-const prodcontroller = require("../controller/product.controller");
-const inviteUserController = require("../controller/inviteUser.controller");
-const companyController = require("../controller/company.controller");
-
+const middleware = require("../middleware/routeMiddleware");
 
 module.exports = function (app) {
     app.use(function (req, res, next) {
@@ -17,73 +9,29 @@ module.exports = function (app) {
         next();
     });
 
-    app.post(
-        "/api/post/signup",
-        [
-            verifySignUp.checkDuplicateEmail
-        ],
-        companyController.companySignup,
-        controller.signup,
-    );
-    app.post(
-        "/api/post/userRegister",
-        [
-            verifySignUp.checkDuplicateEmail
-        ],
-        controller.signup,
-    );
+    app.post("/api/post/signup", middleware.email, middleware.companyController, middleware.signupController);
+    app.post("/api/post/userRegister", middleware.email, middleware.signupController);
 
     //user
-    app.post("/api/post/signin", controller.signin);
-    app.post("/api/post/logout", controller.logout);
-    app.get("/api/get/getuser/", controller.getUser);
-    app.get("/api/get/userSessionList", controller.userSessionList);
-    app.post("/api/post/forgotPassword", controller.forgotPassword);
-    app.post("/api/post/resetPassword", controller.resetPassword);
+    app.post("/api/post/signin", middleware.signinController);
+    app.post("/api/post/logout", middleware.userLoggedin, middleware.logoutController);
+    app.get("/api/get/getuser/", middleware.userLoggedin, middleware.getUserController);
+    app.get("/api/get/userSessionList", middleware.userLoggedin, middleware.userSessionController);
+    app.post("/api/post/forgotPassword", middleware.forgotPasswordController);
+    app.post("/api/post/resetPassword", middleware.resetPasswordController);
 
 
     //product
-    app.post("/api/post/addProduct",
-        [
-            verifySignin.checkUserLoggedin
-        ],
-        prodcontroller.addProduct
-    );
-    app.get("/api/get/getProduct/",
-        prodcontroller.getProduct
-    );
-    app.get("/api/get/getAllProduct/",
-        [
-            verifySignin.checkUserLoggedin
-        ],
-        prodcontroller.getAllProduct
-    );
-    app.put("/api/put/updateProduct",
-        [
-            verifySignin.checkUserLoggedin
-        ],
-        prodcontroller.updateProduct);
-    app.post("/api/post/deleteProduct",
-        [
-            verifySignin.checkUserLoggedin
-        ],
-        prodcontroller.deleteProduct);
+    app.post("/api/post/addProduct", middleware.userLoggedin, middleware.companyhasManyUser, middleware.addProdController);
+    app.get("/api/get/getProduct/", middleware.userLoggedin, middleware.companyhasManyUser, middleware.getProdController);
+    app.get("/api/get/getAllProduct/", middleware.userLoggedin, middleware.companyhasManyUser, middleware.getAllProductController);
+    app.put("/api/put/updateProduct", middleware.userLoggedin, middleware.companyhasManyUser, middleware.updateProductController);
+    app.post("/api/post/deleteProduct", middleware.userLoggedin, middleware.companyhasManyUser, middleware.deleteProductController);
 
     //inviteUser
-    app.post("/api/post/inviteUser",
-        [
-            verifySignin.checkUserLoggedin,
-            verifyCompanyhasManyUser.checkCompanyandUser
-
-        ],
-        inviteUserController.inviteUser);
+    app.post("/api/post/inviteUser", middleware.userLoggedin, middleware.companyhasManyUser, middleware.invitationController);
 
     app.post(
-        "/api/post/invitationStatus",
-        [
-            invitation.checkInvitationExist,
-            verifySignin.checkUserLoggedin
-        ],
-        inviteUserController.invitationReply);
+        "/api/post/invitationStatus", middleware.userLoggedin, middleware.invitation, middleware.invitationReplyController);
 
 };
