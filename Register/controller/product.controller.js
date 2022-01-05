@@ -105,9 +105,21 @@ exports.deleteProduct = async (req, res) => {
 
 exports.getAllProduct = async (req, res) => {
     try {
-        const product = await Product.findAll()
+        const product = await Product.findOne({
+            where: {
+                companyId: req.header('companyId')
+            }
+        })
         if (product) {
-            res.send({ product })
+            res.send([{
+                product: {
+                    companyId: product.companyId,
+                    productType: product.productType,
+                    productName: product.productName,
+                    productQuantity: product.productQuantity,
+                    productPrice: product.productPrice
+                }
+            }])
             console.log(product);
         }
         else {

@@ -51,7 +51,11 @@ module.exports = function (app) {
     );
     app.get("/api/get/getProduct/",
         prodcontroller.getProduct
-    ); app.get("/api/get/getAllProduct/",
+    );
+    app.get("/api/get/getAllProduct/",
+        [
+            verifySignin.checkUserLoggedin
+        ],
         prodcontroller.getAllProduct
     );
     app.put("/api/put/updateProduct",
@@ -67,15 +71,15 @@ module.exports = function (app) {
 
     //inviteUser
     app.post("/api/post/inviteUser",
-        [  
+        [
             verifySignin.checkUserLoggedin,
             verifyCompanyhasManyUser.checkCompanyandUser
-            
+
         ],
         inviteUserController.inviteUser);
 
     app.post(
-        "/api/post/invitationStatus", 
+        "/api/post/invitationStatus",
         [
             invitation.checkInvitationExist,
             verifySignin.checkUserLoggedin
