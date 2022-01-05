@@ -8,4 +8,5 @@ let trans = nodemailer.createTransport({
         pass: 'Raj@6500'
     }
 });
-module.exports = { trans }
+const fromEmail = process.env.EMAIL;
+module.exports = { trans, fromEmail }

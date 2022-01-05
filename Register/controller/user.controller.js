@@ -4,7 +4,7 @@ const User = db.user;
 const Company = db.company;
 const Session = db.session;
 const CompanyhasManyUser = db.companyhasManyUser;
-const nodemailer = require('nodemailer');
+const emailConfig = require("../config/email.config.js");
 let jwt = require("jsonwebtoken");
 let bcrypt = require("bcryptjs");
 
@@ -19,22 +19,29 @@ exports.signup = async (req, res, next) => {
                 companyName: req.body.companyName
             }
         })
-        const user = await User.create({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            email: req.body.email,
-            password: bcrypt.hashSync(req.body.password, 8),
-        })
-        await CompanyhasManyUser.create({
-            companyId: company.companyId,
-            userId: user.userId
-        })
-        if (user) {
-            res.send({ message: "User Was registerd succesfully!" });
+        if (!req.body.firstName && req.body.email && req.body.password) {
+            res.status(404).send({
+                message: 'firstName, email and password are required field!!!'
+            })
+        }
+        else {
+            const user = await User.create({
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+                password: bcrypt.hashSync(req.body.password, 8),
+            })
+            await CompanyhasManyUser.create({
+                companyId: company.companyId,
+                userId: user.userId
+            })
+            if (user) {
+                res.send({ message: "User Was registerd succesfully!" });
+            }
         }
     }
     catch (err) {
-        res.status(500).send({ message: err.message });
+        res.status(404).send({ message: err.message });
     }
 }
 
@@ -42,59 +49,67 @@ exports.signup = async (req, res, next) => {
 //user signin
 exports.signin = async (req, res, next) => {
     try {
-        const user = await User.findOne({
-            where: {
-                email: req.body.email
-            }
-        })
-        const companyhasManyUser = await CompanyhasManyUser.findOne({
-            where:{
-                userId : user.userId
-            }
-        })
-        const company = await Company.findOne({
-            where: {
-                companyId : companyhasManyUser.companyId  
-            }
-        })
-        if (!user) {
-            return res.status(404).send({ message: "User Not Found." });
+        if (!req.body.email && req.body.password) {
+            res.status(404).send({
+                message: 'email and password are required field!!!'
+            })
         }
-        let token = 'Bearer ' + jwt.sign({ id: user.id }, config.secret, {
-            expiresIn: 86400
-        });
-        await Session.create({
-            userId: user.userId,
-            token: token,
-            status: Session.status
-        })
-        let passwordIsValid = bcrypt.compareSync(
-            req.body.password,
-            user.password
-        );
-        if (!passwordIsValid) {
-            return res.status(401).send({
-                Token: null,
-                message: "Invalid password!"
-            });
-        }
-        let users = await User.findOne({
-            where: {
-                userId: user.userId
-            }
-        })
-        res.status(200).send(
-            {
-                users,
-                company,
-                session: {
-                    userId: user.userId,
-                    token: token,
-                    status: Session.status
+        else {
+            const user = await User.findOne({
+                where: {
+                    email: req.body.email
                 }
+            })
+            const companyhasManyUser = await CompanyhasManyUser.findOne({
+                where: {
+                    userId: user.userId
+                }
+            })
+            const company = await Company.findOne({
+                where: {
+                    companyId: companyhasManyUser.companyId
+                }
+            })
+            if (!user) {
+                return res.status(404).send({ message: "User Not Found." });
+            }
+            let token = 'Bearer ' + jwt.sign({ id: user.id }, config.secret, {
+                expiresIn: 86400
             });
-    } catch (err) {
-        res.status(500).send({ message: err.message });
+            await Session.create({
+                userId: user.userId,
+                token: token,
+                status: Session.status
+            })
+            let passwordIsValid = bcrypt.compareSync(
+                req.body.password,
+                user.password
+            );
+            if (!passwordIsValid) {
+                return res.status(401).send({
+                    Token: null,
+                    message: "Invalid password!"
+                });
+            }
+            let users = await User.findOne({
+                where: {
+                    userId: user.userId
+                }
+            })
+            res.status(200).send(
+                {
+                    users,
+                    company,
+                    session: {
+                        userId: user.userId,
+                        token: token,
+                        status: Session.status
+                    }
+                });
+        }
+    }
+    catch (err) {
+        res.status(404).send({ message: err.message });
     }
 }
 
@@ -103,27 +118,34 @@ exports.signin = async (req, res, next) => {
 //logout user
 exports.logout = async (req, res) => {
     try {
-        const session = await Session.findOne({
-            where: {
-                token: req.headers.authorization
+        if (!req.headers.authorization) {
+            res.status(404).send({
+                message: 'please set token in header!!!'
+            })
+        }
+        else {
+            const session = await Session.findOne({
+                where: {
+                    token: req.headers.authorization
+                }
+            })
+            if (req.headers.authorization === session.token && session.status === 'active') {
+                Session.update({
+                    status: 'Expierd'
+                },
+                    {
+                        where: {
+                            token: req.headers.authorization
+                        },
+                    })
+                res.send({ message: "User logged out sucessfully!" });
+            } else {
+                res.send({ message: 'token unauthorized!' });
             }
-        })
-        if (req.headers.authorization === session.token && session.status === 'active') {
-            Session.update({
-                status: 'Expierd'
-            },
-                {
-                    where: {
-                        token: req.headers.authorization
-                    },
-                })
-            res.send({ message: "User logged out sucessfully!" });
-        } else {
-            res.send({ message: 'token unauthorized!' });
         }
     }
     catch (err) {
-        res.status(500).send({ message: err.message });
+        res.status(404).send({ message: err.message });
 
     }
 }
@@ -132,35 +154,36 @@ exports.logout = async (req, res) => {
 //get user
 exports.getUser = async (req, res) => {
     try {
-        const user = await User.findOne({
-            where: {
-                id: req.query.id
-            }
-        })
-        // const user = await User.findOne({
-        //     where:{
-        //         id: req.param('id')
-        //     }
-        // })
-
-        console.log(user, "xxxxxxxxxxxxxxxxxxxx");
-        if (user) {
-            res.send({
-                user: {
-                    id: user.id,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email: user.email,
-                    status: user.status
-                }
+        if (!req.headers.authorization && req.header('userId')) {
+            res.status(404).send({
+                message: 'please set the token and userId in header!!!'
             })
         }
         else {
-            res.send({ message: 'Invalid email!' });
+            const user = await User.findOne({
+                where: {
+                    userId: req.header('userId')
+                }
+            })
+
+            if (user) {
+                res.send({
+                    user: {
+                        userId: user.userId,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        email: user.email,
+                        status: user.status
+                    }
+                })
+            }
+            else {
+                res.send({ message: 'Invalid email!' });
+            }
         }
     }
     catch (err) {
-        res.status(500).send({ message: err.message });
+        res.status(404).send({ message: err.message });
     }
 }
 
@@ -168,22 +191,28 @@ exports.getUser = async (req, res) => {
 //get userSession list
 exports.userSessionList = async (req, res) => {
     try {
-        const session = await Session.findAll({
-            limit: Session.userId,
-            where: {
-                userId: req.query.userId,
+        if (!req.headers.authorization && req.header('userId')) {
+            res.status(404).send({
+                message: 'please set the token and userId in header!!!'
+            })
+        }
+        else {
+            const session = await Session.findAll({
+                limit: Session.userId,
+                where: {
+                    userId: req.header('userId'),
+                }
+            });
+
+            if (session) {
+                res.send({ user: session });
+            } else {
+                res.send({ message: 'User sessions not found!' });
             }
-        });
-        console.log(session, "xxxxxxxxxxxxxxxxxxxx");
-        console.log(session.status);
-        if (session) {
-            res.send({ user: session });
-        } else {
-            res.send({ message: 'User sessions not found!' });
         }
     }
     catch (err) {
-        res.status(500).send({ message: err.message });
+        res.status(404).send({ message: err.message });
     }
 }
 
@@ -192,34 +221,35 @@ exports.userSessionList = async (req, res) => {
 //forgot password
 exports.forgotPassword = async (req, res) => {
     try {
-        const { email } = req.body;
-        const user = await User.findOne({ where: { email } })
-        if (!user) {
-            return res.status(400).json({ error: "User with this email does not exist." });
+        if (!req.body.email) {
+            res.status(404).send({
+                message: 'please input the email!!!'
+            })
         }
-        let token = jwt.sign({ id: user.id }, config.secret, { expiresIn: 86400 });
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: 'rajpa4567890@gmail.com',
-                pass: 'Raj@6500'
+        else {
+            const { email } = req.body;
+            const user = await User.findOne({ where: { email } })
+            if (!user) {
+                return res.status(400).json({ error: "User with this email does not exist." });
             }
-        });
-        const mailOptions = {
-            from: 'rajpa4567890@gmail.com',
-            to: email,
-            subject: 'Forgot Password',
-            html: `
+            let token = 'Bearer ' + jwt.sign({ id: user.userId }, config.secret, { expiresIn: 86400 });
+            const transporter = await emailConfig.trans;
+            const mailOptions = {
+                from: emailConfig.fromEmail,
+                to: email,
+                subject: 'Forgot Password',
+                html: `
                 <h2>Please Use Below Token To Reset Your Password.</h2>
                 <div>${token}</div>
             `
-        };
-        await transporter.sendMail(mailOptions);
-        user.update({ emailToken: token });
-        return res.send({ message: 'Please check the email and follow the instruction' });
+            };
+            await transporter.sendMail(mailOptions);
+            user.update({ emailToken: token });
+            return res.send({ message: 'Please check the email and follow the instruction' });
+        }
     }
     catch (err) {
-        res.status(500).send({ message: err.message });
+        res.status(404).send({ message: err.message });
     }
 }
 
@@ -227,33 +257,39 @@ exports.forgotPassword = async (req, res) => {
 //reset password
 exports.resetPassword = async (req, res) => {
     try {
-        const user = await User.findOne({
-            where: {
-                emailToken: req.body.emailToken
-            }
-        })
-        if (user) {
-            console.log(user, "bgadkgkgsknnfldn");
-            if (req.body.newPassword) {
-                await User.update({
-                    password: bcrypt.hashSync(req.body.newPassword),
-                    emailToken: req.body.emailToken
-                }, {
-                    where: { emailToken: req.body.emailToken }
-
-                })
-                res.json({ message: 'Password reset succesfully.' });
-            }
-            else {
-                res.send({ message: 'New Password Required!' });
-            }
+        if (!req.body.email && req.headers.authorization) {
+            res.status(404).send({
+                message: 'email and emailToken are required!!!'
+            })
         }
         else {
-            res.json({ message: 'emailToken is invalid!' });
+            const user = await User.findOne({
+                where: {
+                    emailToken: req.headers.authorization
+                }
+            })
+            if (user) {
+                console.log(user, "bgadkgkgsknnfldn");
+                if (req.body.newPassword) {
+                    await User.update({
+                        password: bcrypt.hashSync(req.body.newPassword),
+                        emailToken: req.headers.authorization
+                    }, {
+                        where: { emailToken: req.headers.authorization }
+                    })
+                    res.json({ message: 'Password reset succesfully.' });
+                }
+                else {
+                    res.send({ message: 'New Password Required!' });
+                }
+            }
+            else {
+                res.json({ message: 'emailToken is invalid!' });
+            }
         }
     }
     catch (err) {
-        res.status(500).send({ message: err.message });
+        res.status(404).send({ message: err.message });
     }
 }
 
