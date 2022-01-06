@@ -1,11 +1,13 @@
 const nodemailer = require('nodemailer');
 
 let trans = nodemailer.createTransport({
-    service: 'gmail',
-    secure: true,
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // use TLS
+    //create a .env file and define the process.env variables 
     auth: {
-        user: 'rajpa4567890@gmail.com',
-        pass: 'Raj@6500'
+        user: process.env.SMTP_TO_EMAIL,
+        pass: process.env.SMTP_TO_PASSWORD,
     }
 });
 const fromEmail = process.env.EMAIL;

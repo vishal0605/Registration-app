@@ -7,6 +7,7 @@ const CompanyhasManyUser = db.companyhasManyUser;
 const emailConfig = require("../config/email.config.js");
 let jwt = require("jsonwebtoken");
 let bcrypt = require("bcryptjs");
+require('dotenv').config();
 
 
 
@@ -118,30 +119,23 @@ exports.signin = async (req, res, next) => {
 //logout user
 exports.logout = async (req, res) => {
     try {
-        if (!req.headers.authorization) {
-            res.status(404).send({
-                message: 'please set token in header!!!'
-            })
-        }
-        else {
-            const session = await Session.findOne({
-                where: {
-                    token: req.headers.authorization
-                }
-            })
-            if (req.headers.authorization === session.token && session.status === 'active') {
-                Session.update({
-                    status: 'Expierd'
-                },
-                    {
-                        where: {
-                            token: req.headers.authorization
-                        },
-                    })
-                res.send({ message: "User logged out sucessfully!" });
-            } else {
-                res.send({ message: 'token unauthorized!' });
+        const session = await Session.findOne({
+            where: {
+                token: req.headers.authorization
             }
+        })
+        if (req.headers.authorization === session.token && session.status === 'active') {
+            Session.update({
+                status: 'Expierd'
+            },
+                {
+                    where: {
+                        token: req.headers.authorization
+                    },
+                })
+            res.send({ message: "User logged out sucessfully!" });
+        } else {
+            res.send({ message: 'token unauthorized!' });
         }
     }
     catch (err) {
@@ -154,9 +148,9 @@ exports.logout = async (req, res) => {
 //get user
 exports.getUser = async (req, res) => {
     try {
-        if (!req.headers.authorization && req.header('userId')) {
+        if (!req.header('userId')) {
             res.status(404).send({
-                message: 'please set the token and userId in header!!!'
+                message: 'please set the userId in header!!!'
             })
         }
         else {
@@ -191,9 +185,9 @@ exports.getUser = async (req, res) => {
 //get userSession list
 exports.userSessionList = async (req, res) => {
     try {
-        if (!req.headers.authorization && req.header('userId')) {
+        if (!req.header('userId')) {
             res.status(404).send({
-                message: 'please set the token and userId in header!!!'
+                message: 'please set the userId in header!!!'
             })
         }
         else {
@@ -237,9 +231,8 @@ exports.forgotPassword = async (req, res) => {
             const mailOptions = {
                 from: emailConfig.fromEmail,
                 to: email,
-                subject: 'Forgot Password',
-                html: `
-                <h2>Please Use Below Token To Reset Your Password.</h2>
+                subject: 'Invitation Link',
+                html: `<h2>Please Use Below Token To Reset Your Password.</h2>
                 <div>${token}</div>
             `
             };
@@ -249,6 +242,7 @@ exports.forgotPassword = async (req, res) => {
         }
     }
     catch (err) {
+        console.log(process.env.EMAIL);
         res.status(404).send({ message: err.message });
     }
 }
@@ -257,9 +251,9 @@ exports.forgotPassword = async (req, res) => {
 //reset password
 exports.resetPassword = async (req, res) => {
     try {
-        if (!req.body.email && req.headers.authorization) {
+        if (!req.body.email) {
             res.status(404).send({
-                message: 'email and emailToken are required!!!'
+                message: 'email required!!!'
             })
         }
         else {

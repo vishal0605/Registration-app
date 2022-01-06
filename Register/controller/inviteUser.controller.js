@@ -4,11 +4,13 @@ const Invitation = db.invitation;
 let jwt = require("jsonwebtoken");
 const config = require("../config/auth.config.js");
 const emailConfig = require("../config/email.config.js");
+require('dotenv').config()
+
 exports.inviteUser = async (req, res) => {
     try {
-        if (!req.header('companyId') && req.headers.authorization && req.body.email) {
+        if (!req.header('companyId') && req.body.email) {
             res.status(404).send({
-                message: 'companyId, token and email are required!!!'
+                message: 'companyId and email are required!!!'
             })
         }
         else {
@@ -49,9 +51,9 @@ exports.inviteUser = async (req, res) => {
 
 exports.invitationReply = async (req, res) => {
     try {
-        if (!req.body.authorization && req.body.status && req.body.email) {
+        if (!req.body.status && req.body.email) {
             res.status(404).send({
-                message: 'token, email and status are required!!!'
+                message: 'email and status are required!!!'
             })
         }
         else {

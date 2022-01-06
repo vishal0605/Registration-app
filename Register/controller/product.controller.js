@@ -36,9 +36,9 @@ exports.addProduct = async (req, res) => {
 //get product detail
 exports.getProduct = async (req, res) => {
     try {
-        if (!req.header('id') && req.header('companyId') && req.headers.authorization) {
+        if (!req.header('id') && req.header('companyId')) {
             res.status(404).send({
-                message: 'required id, companyId and token in header!!!'
+                message: 'required id and companyId in header!!!'
             })
         }
         else {
@@ -115,9 +115,9 @@ exports.updateProduct = async (req, res) => {
 //delete product
 exports.deleteProduct = async (req, res) => {
     try {
-        if (!req.header('companyId') && req.header('id') && req.headers.authorization) {
+        if (!req.header('companyId') && req.header('id')) {
             res.status(404).send({
-                message: 'companyId, id and token are required!!!'
+                message: 'companyId and id are required!!!'
             })
         }
         else {
@@ -148,9 +148,9 @@ exports.deleteProduct = async (req, res) => {
 
 exports.getAllProduct = async (req, res) => {
     try {
-        if (!req.header('companyId') && req.headers.authorization) {
+        if (!req.header('companyId')) {
             res.status(404).send({
-                message: 'companyId and token are required!!!'
+                message: 'companyId required!!!'
             })
         }
         else {
