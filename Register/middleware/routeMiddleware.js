@@ -5,7 +5,7 @@ const verifyCompanyhasManyUser = require("./verifyCompanyhasManyUser");
 
 module.exports = {
     checkDuplicateEmail: [
-        verifySignUp.checkDuplicateEmail,
+        verifySignUp.checkDuplicateEmail
     ],
     checkUserLoggedin: [
         verifySignin.checkUserLoggedin

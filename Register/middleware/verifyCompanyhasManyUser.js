@@ -1,7 +1,7 @@
 const db = require("../models");
-const Session = db.session;
 const User = db.user;
 const CompanyhasManyUser = db.companyhasManyUser;
+
 
 checkCompanyandUser = async (req, res, next) => {
     try {
@@ -11,13 +11,7 @@ checkCompanyandUser = async (req, res, next) => {
             })
         }
         else {
-            const session = await Session.findOne(
-                {
-                    where: {
-                        token: req.headers.authorization
-                    }
-                }
-            )
+            const session = next.session;
             const user = await User.findOne({
                 where: {
                     userId: session.userId

@@ -9,14 +9,14 @@ checkUserLoggedin = async (req, res, next) => {
             })
         }
         else {
-            const session = await Session.findOne(
+            next.session = await Session.findOne(
                 {
                     where: {
                         token: req.headers.authorization
                     }
                 }
             )
-            if (!session) {
+            if (!next.session) {
                 res.status(400).send({
                     message: "unauthorized!!!"
                 });
@@ -31,7 +31,8 @@ checkUserLoggedin = async (req, res, next) => {
 
 }
 const verifySignin = {
-    checkUserLoggedin: checkUserLoggedin
+    checkUserLoggedin: checkUserLoggedin,
+
 };
 
 
