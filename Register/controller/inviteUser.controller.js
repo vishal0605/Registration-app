@@ -4,7 +4,7 @@ const Invitation = db.invitation;
 let jwt = require("jsonwebtoken");
 const config = require("../config/auth.config.js");
 const emailConfig = require("../config/email.config.js");
-require('dotenv').config()
+
 
 exports.inviteUser = async (req, res) => {
     try {

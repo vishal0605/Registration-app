@@ -7,7 +7,7 @@ const CompanyhasManyUser = db.companyhasManyUser;
 const emailConfig = require("../config/email.config.js");
 let jwt = require("jsonwebtoken");
 let bcrypt = require("bcryptjs");
-require('dotenv').config();
+
 
 
 

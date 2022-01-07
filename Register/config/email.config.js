@@ -6,8 +6,8 @@ let trans = nodemailer.createTransport({
     secure: true, // use TLS
     //create a .env file and define the process.env variables 
     auth: {
-        user: process.env.SMTP_TO_EMAIL,
-        pass: process.env.SMTP_TO_PASSWORD,
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
     }
 });
 const fromEmail = process.env.EMAIL;
