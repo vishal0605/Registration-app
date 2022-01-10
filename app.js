@@ -9,13 +9,14 @@ var corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+require('dotenv').config()
 
 const db = require("./Register/models");
 const authjwt = require("./Register/middleware/verifyAuth");
 db.sequelize.sync({ force: true }).then(async () => {
     console.log("sync db");
 })
-app.get('/api/auth/userSignup/:token', authjwt.verifyToken,(req,res)=>{
+app.get('/api/auth/userRegister/:token', authjwt.verifyToken,(req,res)=>{
     res.sendFile(__dirname + '/Register/templates/index.html');
 });
 app.get('/api/auth/signin',(req,res)=>{
