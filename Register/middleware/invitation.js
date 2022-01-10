@@ -3,33 +3,26 @@ const Invitation = db.invitation;
 
 checkInvitationExist = async (req, res, next) => {
     try {
-        if (!req.body.email) {
-            res.status(404).send({
-                message: 'email not found in body!!!'
-            })
-        }
-        else {
-            const invitation = await Invitation.findOne(
-                {
-                    where: {
-                        email: req.body.email
-                    }
+        const invitation = await Invitation.findOne(
+            {
+                where: {
+                    email: req.body.email
                 }
-            )
-            if (req.body.invitation === 'reject') {
-                await invitation.update({
-                    status: 'rejected'
-                })
-                return res.send({ message: 'Invitation is rejected by company.' });
             }
-            else if (!invitation) {
-                res.status(400).send({
-                    message: "please check the email, user is not invited by company!!!"
-                });
-                return;
-            }
-            next();
+        )
+        if (req.body.invitation === 'reject') {
+            await invitation.update({
+                status: 'rejected'
+            })
+            return res.send({ message: 'Invitation is rejected by company.' });
         }
+        else if (!invitation) {
+            res.status(400).send({
+                message: "please check the email, user is not invited by company!!!"
+            });
+            return;
+        }
+        next();
     }
     catch (err) {
         res.send({ message: err.message });

@@ -5,38 +5,31 @@ const User = db.user;
 
 checkUserLoggedin = async (req, res, next) => {
     try {
-        if (!req.headers.authorization) {
-            res.status(404).send({
-                message: 'token not found in header!!!'
-            })
-        }
-        else {
-            const session = await Session.findOne(
-                {
-                    where: {
-                        token: req.headers.authorization
-                    }
-                }
-            )
-            const user = await User.findOne({
+        const session = await Session.findOne(
+            {
                 where: {
-                    userId: session.userId
+                    token: req.headers.authorization
                 }
-            })
-            next.auth = {
-                isValid: false,
-                session: session,
-                user: user ,
-                companyHasUsers: []
             }
-            if (!session) {
-                res.status(400).send({
-                    message: "unauthorized!!!"
-                });
-                return;
+        )
+        const user = await User.findOne({
+            where: {
+                userId: session.userId
             }
-            next();
+        })
+        next.auth = {
+            isValid: false,
+            session: session,
+            user: user,
+            companyHasUsers: []
         }
+        if (!session) {
+            res.status(400).send({
+                message: "unauthorized!!!"
+            });
+            return;
+        }
+        next();
     }
     catch (err) {
         res.send({ message: err.message });
