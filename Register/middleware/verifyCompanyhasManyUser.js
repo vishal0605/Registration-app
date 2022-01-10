@@ -1,5 +1,4 @@
 const db = require("../models");
-const User = db.user;
 const CompanyhasManyUser = db.companyhasManyUser;
 
 
@@ -11,24 +10,27 @@ checkCompanyandUser = async (req, res, next) => {
             })
         }
         else {
-            const session = next.session;
-            const user = await User.findOne({
-                where: {
-                    userId: session.userId
-                }
-            })
+            console.log(next.auth.user);
             const companyhasManyuser = await CompanyhasManyUser.findOne({
                 where: {
-                    userId: user.userId,
+                    userId: next.auth.user.userId,
                     companyId: req.header('companyId')
                 }
             })
+            next.auth = {
+                isValid: false,
+                session: {},
+                user: {},
+                companyHasUsers: [companyhasManyuser],
+            }
             if (!companyhasManyuser) {
                 res.status(400).send({
                     message: "Invalid Data!!!"
                 });
+
                 return;
             }
+
             next();
         }
     }

@@ -1,5 +1,7 @@
 const db = require("../models");
 const Session = db.session;
+const User = db.user;
+
 
 checkUserLoggedin = async (req, res, next) => {
     try {
@@ -9,14 +11,25 @@ checkUserLoggedin = async (req, res, next) => {
             })
         }
         else {
-            next.session = await Session.findOne(
+            const session = await Session.findOne(
                 {
                     where: {
                         token: req.headers.authorization
                     }
                 }
             )
-            if (!next.session) {
+            const user = await User.findOne({
+                where: {
+                    userId: session.userId
+                }
+            })
+            next.auth = {
+                isValid: false,
+                session: session,
+                user: user ,
+                companyHasUsers: []
+            }
+            if (!session) {
                 res.status(400).send({
                     message: "unauthorized!!!"
                 });
